@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>Hello World</h1>
+<p>I'm hosted with GitHub Pages.</p>
+</body>
+</html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://dekatutorial.github.io/styleGombalin.css" />
+    <link rel="stylesheet" href="https://dekatutorial.github.io/stylePopUp.css" />
+    <script src="test.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.4/dist/sweetalert2.all.min.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <title>Subscribe YT Nais ID</title> </head> <body id="body"> <div class="preload"><p>Loading dulu . . .</p></div> <div class="open"> <div> <div class="lope" onclick="ilang()"> <i class="love material-icons-sharp"> favorite </i> </div> <h3>Pencet Love nya</h3> </div> </div> <div id="bg"></div> <img src="https://media4.giphy.com/media/VgNk3XyaEibn5ggYQs/giphy.gif?cid=ecf05e47a9w3nvinw3fmpq61m73z17g42ll174nfac1mwh3f&rid=giphy.gif&ct=s" alt="" id="fotoku" />
+
+<h2 id="hai">Hai Sayangkuu!</h2>
+<h3 id="hia">Scrool kesamping Rindikuu</h3>
+
+<div id="slider">
+
+<p>Lagi apa sayangku ?</p>
+<p>Kangeeen nih p p p p</p>
+
+<p>Klik kado nya<span>🎁</span></p>
+
+</div> </body> <script>
+
+musik = src="blob:https://www.youtube.com/acfba6d9-f4fc-4c49-93eb-bb18cf643f92";
+foto = src="https://media1.giphy.com/media/5tC6qK06abrIyKhH1w/giphy.gif?cid=ecf05e479jabxsd7sl21goxho75e4zswyullpv794lxll5ac&rid=giphy.gif&ct=s";
+background = src="https://media0.giphy.com/media/llPDx1SKhNrQPif6LI/giphy.gif?cid=ecf05e47ffl7jaw491qos8n7kk44eq3pm9f40w4p6uwp94mt&rid=giphy.gif&ct=s";
+noWhatsapp = "081226824947";
+
+async function popUp() {
+
+await swalo.fire({ title: "KANGEEEN KANGEEEN", imageUrl: "https://media4.giphy.com/media/VgNk3XyaEibn5ggYQs/giphy.gif?cid=ecf05e47a9w3nvinw3fmpq61m73z17g42ll174nfac1mwh3f&rid=giphy.gif&ct=s" });
+
+kirimPesan();
+
+} $(window).on("load", function () { $(".preload").fadeOut("slow"); }); var audio = new Audio(musik); audio.autoplay = true; audio.loop = true; bg.style = 'background-image: linear-gradient(to top, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("' + background + '");'; fotoku.src = foto; popupku(); var swalo = Swal.mixin({ allowOutsideClick: false }); async function kirimPesan() { var { value: pesan } = await swalo.fire({ title: "Tulis pesan", input: "text", confirmButtonText: "Kirim" }); if (pesan) { await swalo.fire("Kirim ke wa aku ya jawaban nya"); location.assign("https://api.whatsapp.com/send?phone=" + noWhatsapp + "&text=" + pesan); } else { await swalo.fire({ confirmButtonText: "Iya deh", title: "Jangan dikosongin ya :)" }); kirimPesan(); } } document.querySelector("span").addEventListener("click", function () { popUp(); }); var open = document.querySelector(".open"); function ilang() { audio.play(); open.style = "transition: 1.5s ease-out all; opacity: 0; transform: scale(100) translateY(-20px); filter: brightness(0);"; setTimeout(function () { open.style = "display:none;"; }, 1500); setTimeout(function () { fotoku.style = "opacity: 1; transition: 1s all ease; transform: translateY(0px) scale(1);"; }, 500); setTimeout(function () { hai.style = "opacity: 1; transition: 1s all ease; transform: translateY(0px);"; }, 1400); setTimeout(function () { hia.style = "opacity: 1; transition: 1s all ease; transform: translateY(0px);"; }, 1800); setTimeout(function () { slider.style = "opacity: 1; transition: 1s all ease; transform: translateY(0px) scale(1);"; }, 2200); } </script>
+</html>
