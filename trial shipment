@@ -1,3 +1,49 @@
+'========================================================================
+' SUB-RUTIN PEMBANTU
+' Tugas: Mengambil data dari satu sel, memecahnya, mengubahnya menjadi
+' tanggal, dan menempelkannya ke baris tujuan.
+'========================================================================
+Private Sub ProcessAndPasteData(ByVal sourceSheet As Worksheet, ByVal sourceRow As Long, ByVal sourceCol As String, ByVal destSheet As Worksheet, ByVal destRow As Long)
+    Dim dataToPaste As Variant
+    Dim colIndex As Long
+    Dim i As Long
+    
+    ' Memecah data sumber (misal: "24.jun.25;25.jun.25") berdasarkan titik koma
+    dataToPaste = Split(sourceSheet.Cells(sourceRow, sourceCol).Value, ";")
+    colIndex = 6 ' Mulai menempelkan dari kolom F
+    
+    ' Loop untuk setiap data yang sudah dipecah
+    For i = LBound(dataToPaste) To UBound(dataToPaste)
+        Dim dataString As String
+        dataString = Trim(dataToPaste(i))
+        
+        ' Jangan proses jika string kosong
+        If dataString <> "" Then
+            On Error Resume Next ' Lanjutkan jika ada error saat konversi tanggal
+            Dim convertedDate As Date
+            ' Ganti titik dengan spasi, lalu konversi ke tipe data Date
+            convertedDate = CDate(Replace(dataString, ".", " "))
+            
+            If Err.Number = 0 Then ' Jika konversi berhasil
+                ' Masukkan nilai tanggal ke sel tujuan
+                destSheet.Cells(destRow, colIndex).Value = convertedDate
+                ' Terapkan format "dd - mmm"
+                destSheet.Cells(destRow, colIndex).NumberFormat = "dd - mmm"
+            Else ' Jika gagal (bukan format tanggal), tempel sebagai teks biasa
+                destSheet.Cells(destRow, colIndex).Value = dataString
+                Err.Clear
+            End If
+            On Error GoTo 0 ' Matikan penanganan error
+        End If
+        
+        colIndex = colIndex + 1 ' Pindah ke kolom berikutnya
+    Next i
+End Sub
+
+'========================================================================
+' MAKRO UTAMA
+' Tugas: Mengatur seluruh proses dari awal hingga akhir.
+'========================================================================
 Sub TrackRows()
     ' Menonaktifkan pembaruan layar untuk mempercepat eksekusi makro
     Application.ScreenUpdating = False
@@ -9,9 +55,6 @@ Sub TrackRows()
     Dim rowNumbers As Variant
     Dim singleRow As Variant
     Dim sheetName As String
-    Dim dataToPaste As Variant
-    Dim i As Long
-    Dim colIndex As Long
     
     ' Mengatur workbook dan sheet "Summary"
     Set wb = ThisWorkbook
@@ -25,31 +68,27 @@ Sub TrackRows()
         Exit Sub
     End If
     
-    ' 1. Minta input dari pengguna untuk baris yang akan di-tracking
-    rowInput = InputBox("Masukkan nomor baris yang ingin di-tracking (pisahkan dengan koma jika lebih dari satu, contoh: 33,34,35).", "Pilih Baris")
+    ' 1. Minta input dari pengguna
+    rowInput = InputBox("Masukkan nomor baris yang ingin di-tracking (pisahkan dengan koma, cth: 33,34,35).", "Pilih Baris")
     
-    ' Keluar dari sub jika pengguna membatalkan atau tidak memasukkan apa pun
     If rowInput = "" Then Exit Sub
     
-    ' Memecah input string menjadi array berdasarkan koma
+    ' Memecah input string menjadi array
     rowNumbers = Split(rowInput, ",")
     
     ' Loop melalui setiap nomor baris yang dimasukkan
     For Each singleRow In rowNumbers
-        ' Mengkonversi elemen array ke tipe data Long (angka)
         Dim currentRow As Long
-        currentRow = CLng(Trim(singleRow)) ' Trim untuk menghapus spasi
+        currentRow = CLng(Trim(singleRow))
         
         ' 2. Buat sheet baru dengan nama dari kolom E
         sheetName = summarySheet.Cells(currentRow, "E").Value
-        
-        ' Periksa apakah nama sheet valid
         If sheetName = "" Then
-            MsgBox "Nama sheet tidak ditemukan pada baris " & currentRow & ", kolom E. Baris ini akan dilewati.", vbExclamation
-            GoTo NextRow ' Lanjut ke baris berikutnya
+            MsgBox "Nama sheet tidak ditemukan pada baris " & currentRow & ", kolom E. Baris ini dilewati.", vbExclamation
+            GoTo NextRow
         End If
         
-        ' Hapus sheet lama jika ada nama yang sama untuk menghindari error
+        ' Hapus sheet lama jika namanya sama untuk menghindari error
         Application.DisplayAlerts = False
         On Error Resume Next
         wb.Sheets(sheetName).Delete
@@ -60,46 +99,15 @@ Sub TrackRows()
         Set newSheet = wb.Sheets.Add(After:=wb.Sheets(wb.Sheets.Count))
         newSheet.Name = sheetName
         
-        ' 3 & 4. Salin data dari kolom AL dan paste ke baris 4
-        dataToPaste = Split(summarySheet.Cells(currentRow, "AL").Value, ";")
-        colIndex = 6 ' Mulai dari kolom F
-        For i = LBound(dataToPaste) To UBound(dataToPaste)
-            newSheet.Cells(4, colIndex).Value = dataToPaste(i)
-            colIndex = colIndex + 1
-        Next i
-        
-        ' 5. Salin data dari kolom AM dan paste ke baris 10
-        dataToPaste = Split(summarySheet.Cells(currentRow, "AM").Value, ";")
-        colIndex = 6 ' Mulai lagi dari kolom F
-        For i = LBound(dataToPaste) To UBound(dataToPaste)
-            newSheet.Cells(10, colIndex).Value = dataToPaste(i)
-            colIndex = colIndex + 1
-        Next i
-        
-        ' --- TAMBAHAN ---
-        ' Salin data dari kolom AN dan paste ke baris 20
-        dataToPaste = Split(summarySheet.Cells(currentRow, "AN").Value, ";")
-        colIndex = 6 ' Mulai lagi dari kolom F
-        For i = LBound(dataToPaste) To UBound(dataToPaste)
-            newSheet.Cells(20, colIndex).Value = dataToPaste(i)
-            colIndex = colIndex + 1
-        Next i
-        
-        ' Salin data dari kolom AO dan paste ke baris 30
-        dataToPaste = Split(summarySheet.Cells(currentRow, "AO").Value, ";")
-        colIndex = 6 ' Mulai lagi dari kolom F
-        For i = LBound(dataToPaste) To UBound(dataToPaste)
-            newSheet.Cells(30, colIndex).Value = dataToPaste(i)
-            colIndex = colIndex + 1
-        Next i
-        ' --- AKHIR TAMBAHAN ---
+        ' Panggil sub-rutin untuk setiap kolom yang diminta
+        ProcessAndPasteData summarySheet, currentRow, "AL", newSheet, 4   ' Kolom AL -> Baris 4
+        ProcessAndPasteData summarySheet, currentRow, "AM", newSheet, 10  ' Kolom AM -> Baris 10
+        ProcessAndPasteData summarySheet, currentRow, "AN", newSheet, 20  ' Kolom AN -> Baris 20
+        ProcessAndPasteData summarySheet, currentRow, "AO", newSheet, 30  ' Kolom AO -> Baris 30
         
 NextRow:
     Next singleRow
     
-    ' Mengaktifkan kembali pembaruan layar
     Application.ScreenUpdating = True
-    
-    ' Pesan konfirmasi setelah selesai
     MsgBox "Proses tracking selesai!", vbInformation, "Selesai"
 End Sub
