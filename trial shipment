@@ -1,14 +1,13 @@
 '========================================================================
 ' SUB-RUTIN PEMBANTU
-' Tugas: Mengambil data dari satu sel, memecahnya, mengubahnya menjadi
-' tanggal, dan menempelkannya ke baris tujuan.
+' Tugas: Mengambil data, mengubah format tanggal, dan menempelkannya.
 '========================================================================
 Private Sub ProcessAndPasteData(ByVal sourceSheet As Worksheet, ByVal sourceRow As Long, ByVal sourceCol As String, ByVal destSheet As Worksheet, ByVal destRow As Long)
     Dim dataToPaste As Variant
     Dim colIndex As Long
     Dim i As Long
     
-    ' Memecah data sumber (misal: "24.jun.25;25.jun.25") berdasarkan titik koma
+    ' Memecah data sumber berdasarkan titik koma
     dataToPaste = Split(sourceSheet.Cells(sourceRow, sourceCol).Value, ";")
     colIndex = 6 ' Mulai menempelkan dari kolom F
     
@@ -17,23 +16,20 @@ Private Sub ProcessAndPasteData(ByVal sourceSheet As Worksheet, ByVal sourceRow 
         Dim dataString As String
         dataString = Trim(dataToPaste(i))
         
-        ' Jangan proses jika string kosong
         If dataString <> "" Then
-            On Error Resume Next ' Lanjutkan jika ada error saat konversi tanggal
+            On Error Resume Next
             Dim convertedDate As Date
             ' Ganti titik dengan spasi, lalu konversi ke tipe data Date
             convertedDate = CDate(Replace(dataString, ".", " "))
             
             If Err.Number = 0 Then ' Jika konversi berhasil
-                ' Masukkan nilai tanggal ke sel tujuan
                 destSheet.Cells(destRow, colIndex).Value = convertedDate
-                ' Terapkan format "dd - mmm"
                 destSheet.Cells(destRow, colIndex).NumberFormat = "dd - mmm"
-            Else ' Jika gagal (bukan format tanggal), tempel sebagai teks biasa
+            Else ' Jika gagal, tempel sebagai teks biasa
                 destSheet.Cells(destRow, colIndex).Value = dataString
                 Err.Clear
             End If
-            On Error GoTo 0 ' Matikan penanganan error
+            On Error GoTo 0
         End If
         
         colIndex = colIndex + 1 ' Pindah ke kolom berikutnya
@@ -45,26 +41,32 @@ End Sub
 ' Tugas: Mengatur seluruh proses dari awal hingga akhir.
 '========================================================================
 Sub TrackRows()
-    ' Menonaktifkan pembaruan layar untuk mempercepat eksekusi makro
     Application.ScreenUpdating = False
     
     Dim wb As Workbook
     Dim summarySheet As Worksheet
+    Dim trackingSheet As Worksheet
     Dim newSheet As Worksheet
     Dim rowInput As String
     Dim rowNumbers As Variant
     Dim singleRow As Variant
     Dim sheetName As String
     
-    ' Mengatur workbook dan sheet "Summary"
     Set wb = ThisWorkbook
+    
+    ' Periksa keberadaan sheet "Summary" dan "Tracking"
     On Error Resume Next
     Set summarySheet = wb.Sheets("Summary")
+    Set trackingSheet = wb.Sheets("Tracking")
     On Error GoTo 0
     
-    ' Periksa apakah sheet "Summary" ada
     If summarySheet Is Nothing Then
         MsgBox "Sheet dengan nama ""Summary"" tidak ditemukan.", vbCritical, "Error"
+        Exit Sub
+    End If
+    
+    If trackingSheet Is Nothing Then
+        MsgBox "Sheet template dengan nama ""Tracking"" tidak ditemukan.", vbCritical, "Error"
         Exit Sub
     End If
     
@@ -73,33 +75,35 @@ Sub TrackRows()
     
     If rowInput = "" Then Exit Sub
     
-    ' Memecah input string menjadi array
     rowNumbers = Split(rowInput, ",")
     
-    ' Loop melalui setiap nomor baris yang dimasukkan
+    ' Loop melalui setiap nomor baris
     For Each singleRow In rowNumbers
         Dim currentRow As Long
         currentRow = CLng(Trim(singleRow))
         
-        ' 2. Buat sheet baru dengan nama dari kolom E
+        ' 2. Dapatkan nama untuk sheet baru dari kolom E
         sheetName = summarySheet.Cells(currentRow, "E").Value
         If sheetName = "" Then
-            MsgBox "Nama sheet tidak ditemukan pada baris " & currentRow & ", kolom E. Baris ini dilewati.", vbExclamation
+            MsgBox "Nama sheet tidak ditemukan pada baris " & currentRow & ", kolom E. Baris ini akan dilewati.", vbExclamation
             GoTo NextRow
         End If
         
-        ' Hapus sheet lama jika namanya sama untuk menghindari error
+        ' Hapus sheet lama jika namanya sama
         Application.DisplayAlerts = False
         On Error Resume Next
         wb.Sheets(sheetName).Delete
         On Error GoTo 0
         Application.DisplayAlerts = True
         
-        ' Tambah dan ganti nama sheet baru
-        Set newSheet = wb.Sheets.Add(After:=wb.Sheets(wb.Sheets.Count))
+        ' Salin (copy) sheet "Tracking" ke akhir workbook
+        trackingSheet.Copy After:=wb.Sheets(wb.Sheets.Count)
+        Set newSheet = ActiveSheet ' Sheet yang baru disalin menjadi sheet aktif
+        
+        ' Ganti nama sheet yang baru disalin
         newSheet.Name = sheetName
         
-        ' Panggil sub-rutin untuk setiap kolom yang diminta
+        ' Panggil sub-rutin untuk mengisi data
         ProcessAndPasteData summarySheet, currentRow, "AL", newSheet, 4   ' Kolom AL -> Baris 4
         ProcessAndPasteData summarySheet, currentRow, "AM", newSheet, 10  ' Kolom AM -> Baris 10
         ProcessAndPasteData summarySheet, currentRow, "AN", newSheet, 20  ' Kolom AN -> Baris 20
