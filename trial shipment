@@ -1,0 +1,105 @@
+Sub TrackRows()
+    ' Menonaktifkan pembaruan layar untuk mempercepat eksekusi makro
+    Application.ScreenUpdating = False
+    
+    Dim wb As Workbook
+    Dim summarySheet As Worksheet
+    Dim newSheet As Worksheet
+    Dim rowInput As String
+    Dim rowNumbers As Variant
+    Dim singleRow As Variant
+    Dim sheetName As String
+    Dim dataToPaste As Variant
+    Dim i As Long
+    Dim colIndex As Long
+    
+    ' Mengatur workbook dan sheet "Summary"
+    Set wb = ThisWorkbook
+    On Error Resume Next
+    Set summarySheet = wb.Sheets("Summary")
+    On Error GoTo 0
+    
+    ' Periksa apakah sheet "Summary" ada
+    If summarySheet Is Nothing Then
+        MsgBox "Sheet dengan nama ""Summary"" tidak ditemukan.", vbCritical, "Error"
+        Exit Sub
+    End If
+    
+    ' 1. Minta input dari pengguna untuk baris yang akan di-tracking
+    rowInput = InputBox("Masukkan nomor baris yang ingin di-tracking (pisahkan dengan koma jika lebih dari satu, contoh: 33,34,35).", "Pilih Baris")
+    
+    ' Keluar dari sub jika pengguna membatalkan atau tidak memasukkan apa pun
+    If rowInput = "" Then Exit Sub
+    
+    ' Memecah input string menjadi array berdasarkan koma
+    rowNumbers = Split(rowInput, ",")
+    
+    ' Loop melalui setiap nomor baris yang dimasukkan
+    For Each singleRow In rowNumbers
+        ' Mengkonversi elemen array ke tipe data Long (angka)
+        Dim currentRow As Long
+        currentRow = CLng(Trim(singleRow)) ' Trim untuk menghapus spasi
+        
+        ' 2. Buat sheet baru dengan nama dari kolom E
+        sheetName = summarySheet.Cells(currentRow, "E").Value
+        
+        ' Periksa apakah nama sheet valid
+        If sheetName = "" Then
+            MsgBox "Nama sheet tidak ditemukan pada baris " & currentRow & ", kolom E. Baris ini akan dilewati.", vbExclamation
+            GoTo NextRow ' Lanjut ke baris berikutnya
+        End If
+        
+        ' Hapus sheet lama jika ada nama yang sama untuk menghindari error
+        Application.DisplayAlerts = False
+        On Error Resume Next
+        wb.Sheets(sheetName).Delete
+        On Error GoTo 0
+        Application.DisplayAlerts = True
+        
+        ' Tambah dan ganti nama sheet baru
+        Set newSheet = wb.Sheets.Add(After:=wb.Sheets(wb.Sheets.Count))
+        newSheet.Name = sheetName
+        
+        ' 3 & 4. Salin data dari kolom AL dan paste ke baris 4
+        dataToPaste = Split(summarySheet.Cells(currentRow, "AL").Value, ";")
+        colIndex = 6 ' Mulai dari kolom F
+        For i = LBound(dataToPaste) To UBound(dataToPaste)
+            newSheet.Cells(4, colIndex).Value = dataToPaste(i)
+            colIndex = colIndex + 1
+        Next i
+        
+        ' 5. Salin data dari kolom AM dan paste ke baris 10
+        dataToPaste = Split(summarySheet.Cells(currentRow, "AM").Value, ";")
+        colIndex = 6 ' Mulai lagi dari kolom F
+        For i = LBound(dataToPaste) To UBound(dataToPaste)
+            newSheet.Cells(10, colIndex).Value = dataToPaste(i)
+            colIndex = colIndex + 1
+        Next i
+        
+        ' --- TAMBAHAN ---
+        ' Salin data dari kolom AN dan paste ke baris 20
+        dataToPaste = Split(summarySheet.Cells(currentRow, "AN").Value, ";")
+        colIndex = 6 ' Mulai lagi dari kolom F
+        For i = LBound(dataToPaste) To UBound(dataToPaste)
+            newSheet.Cells(20, colIndex).Value = dataToPaste(i)
+            colIndex = colIndex + 1
+        Next i
+        
+        ' Salin data dari kolom AO dan paste ke baris 30
+        dataToPaste = Split(summarySheet.Cells(currentRow, "AO").Value, ";")
+        colIndex = 6 ' Mulai lagi dari kolom F
+        For i = LBound(dataToPaste) To UBound(dataToPaste)
+            newSheet.Cells(30, colIndex).Value = dataToPaste(i)
+            colIndex = colIndex + 1
+        Next i
+        ' --- AKHIR TAMBAHAN ---
+        
+NextRow:
+    Next singleRow
+    
+    ' Mengaktifkan kembali pembaruan layar
+    Application.ScreenUpdating = True
+    
+    ' Pesan konfirmasi setelah selesai
+    MsgBox "Proses tracking selesai!", vbInformation, "Selesai"
+End Sub
