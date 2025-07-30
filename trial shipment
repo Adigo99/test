@@ -7,11 +7,9 @@ Private Sub ProcessAndPasteData(ByVal sourceSheet As Worksheet, ByVal sourceRow 
     Dim colIndex As Long
     Dim i As Long
     
-    ' Memecah data sumber berdasarkan titik koma
     dataToPaste = Split(sourceSheet.Cells(sourceRow, sourceCol).Value, ";")
     colIndex = 6 ' Mulai menempelkan dari kolom F
     
-    ' Loop untuk setiap data yang sudah dipecah
     For i = LBound(dataToPaste) To UBound(dataToPaste)
         Dim dataString As String
         dataString = Trim(dataToPaste(i))
@@ -19,20 +17,19 @@ Private Sub ProcessAndPasteData(ByVal sourceSheet As Worksheet, ByVal sourceRow 
         If dataString <> "" Then
             On Error Resume Next
             Dim convertedDate As Date
-            ' Ganti titik dengan spasi, lalu konversi ke tipe data Date
             convertedDate = CDate(Replace(dataString, ".", " "))
             
-            If Err.Number = 0 Then ' Jika konversi berhasil
+            If Err.Number = 0 Then
                 destSheet.Cells(destRow, colIndex).Value = convertedDate
                 destSheet.Cells(destRow, colIndex).NumberFormat = "dd - mmm"
-            Else ' Jika gagal, tempel sebagai teks biasa
+            Else
                 destSheet.Cells(destRow, colIndex).Value = dataString
                 Err.Clear
             End If
             On Error GoTo 0
         End If
         
-        colIndex = colIndex + 1 ' Pindah ke kolom berikutnya
+        colIndex = colIndex + 1
     Next i
 End Sub
 
@@ -70,7 +67,6 @@ Sub TrackRows()
         Exit Sub
     End If
     
-    ' 1. Minta input dari pengguna
     rowInput = InputBox("Masukkan nomor baris yang ingin di-tracking (pisahkan dengan koma, cth: 33,34,35).", "Pilih Baris")
     
     If rowInput = "" Then Exit Sub
@@ -82,36 +78,41 @@ Sub TrackRows()
         Dim currentRow As Long
         currentRow = CLng(Trim(singleRow))
         
-        ' 2. Dapatkan nama untuk sheet baru dari kolom E
         sheetName = summarySheet.Cells(currentRow, "E").Value
         If sheetName = "" Then
-            MsgBox "Nama sheet tidak ditemukan pada baris " & currentRow & ", kolom E. Baris ini akan dilewati.", vbExclamation
+            MsgBox "Nama sheet tidak ditemukan pada baris " & currentRow & ", kolom E. Baris ini dilewati.", vbExclamation
             GoTo NextRow
         End If
         
-        ' Hapus sheet lama jika namanya sama
         Application.DisplayAlerts = False
         On Error Resume Next
         wb.Sheets(sheetName).Delete
         On Error GoTo 0
         Application.DisplayAlerts = True
         
-        ' Salin (copy) sheet "Tracking" ke akhir workbook
         trackingSheet.Copy After:=wb.Sheets(wb.Sheets.Count)
-        Set newSheet = ActiveSheet ' Sheet yang baru disalin menjadi sheet aktif
-        
-        ' Ganti nama sheet yang baru disalin
+        Set newSheet = ActiveSheet
         newSheet.Name = sheetName
         
         ' Panggil sub-rutin untuk mengisi data
-        ProcessAndPasteData summarySheet, currentRow, "AL", newSheet, 4   ' Kolom AL -> Baris 4
-        ProcessAndPasteData summarySheet, currentRow, "AM", newSheet, 10  ' Kolom AM -> Baris 10
-        ProcessAndPasteData summarySheet, currentRow, "AN", newSheet, 20  ' Kolom AN -> Baris 20
-        ProcessAndPasteData summarySheet, currentRow, "AO", newSheet, 30  ' Kolom AO -> Baris 30
+        ProcessAndPasteData summarySheet, currentRow, "AL", newSheet, 4
+        ProcessAndPasteData summarySheet, currentRow, "AM", newSheet, 10
+        ProcessAndPasteData summarySheet, currentRow, "AN", newSheet, 20
+        ProcessAndPasteData summarySheet, currentRow, "AO", newSheet, 30
+        
+        ' --- TAMBAHAN BARU ---
+        ' Buat hyperlink di sheet "Summary" kolom B untuk membuka sheet yang baru dibuat
+        summarySheet.Hyperlinks.Add Anchor:=summarySheet.Cells(currentRow, "B"), _
+                                   Address:="", _
+                                   SubAddress:="'" & sheetName & "'!A1", _
+                                   TextToDisplay:="Buka Sheet"
+        ' --- AKHIR TAMBAHAN ---
         
 NextRow:
     Next singleRow
     
+    ' Kembali ke sheet Summary setelah selesai
+    summarySheet.Activate
     Application.ScreenUpdating = True
-    MsgBox "Proses tracking selesai!", vbInformation, "Selesai"
+    MsgBox "Proses tracking selesai! Link telah dibuat di kolom B.", vbInformation, "Selesai"
 End Sub
